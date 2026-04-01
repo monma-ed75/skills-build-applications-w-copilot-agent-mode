@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import include
+import os
 from rest_framework import routers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -44,12 +45,21 @@ urlpatterns += [path('api/', include(router.urls))]
 
 @api_view(['GET'])
 def api_root(request, format=None):
+    # If running in a Codespace, prefer the canonical Codespace URL using
+    # the CODESPACE_NAME environment variable. Otherwise fall back to the
+    # request's absolute URI (usually localhost).
+    codespace = os.environ.get('CODESPACE_NAME')
+    if codespace:
+        base = f"https://{codespace}-8000.app.github.dev"
+    else:
+        base = request.build_absolute_uri('/')[:-1]
+
     return Response({
-        'users': reverse('users-list', request=request, format=format),
-        'teams': reverse('teams-list', request=request, format=format),
-        'activities': reverse('activities-list', request=request, format=format),
-        'leaderboard': reverse('leaderboard-list', request=request, format=format),
-        'workouts': reverse('workouts-list', request=request, format=format),
+        'users': f"{base}/api/users/",
+        'teams': f"{base}/api/teams/",
+        'activities': f"{base}/api/activities/",
+        'leaderboard': f"{base}/api/leaderboard/",
+        'workouts': f"{base}/api/workouts/",
     })
 
 
